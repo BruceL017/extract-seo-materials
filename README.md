@@ -4,7 +4,7 @@ Turn product-development conversations into traceable SEO source material for Op
 
 [安装](#安装) | [使用方法](#使用方法) | [工作流程](#工作流程) | [输出结构](#输出结构) | [安全边界](#安全边界)
 
-Extract SEO Materials 是一个 Codex Skill，用于从开发者与 Agent 的当前产品开发会话中，提取可复用、可追溯、可持续累积的 SEO 初始素材。
+Extract SEO Materials 是一个 Codex Skill，用于从开发者在当前产品开发会话中，提取可复用、可追溯、可持续累积的 SEO 初始素材。
 
 如果当前会话存在合格素材，一次运行会先生成一份带时间戳的素材文档，再读取同一项目内已有的会话素材，完整重建唯一的项目汇总。不同会话不需要直接互相读取；它们通过项目目录中的 Markdown 文件共同补充同一个主题。
 
@@ -129,10 +129,6 @@ _content_materials/
 该 Skill 可用于 Web3、SaaS、开发者工具、电商或其他产品领域，不依赖特定行业。
 
 它负责沉淀 SEO 内容素材，不负责文章正文、编辑审核、内容发布或效果监测。当前工作目录是项目边界，不进行跨仓库汇总。
-
-## 兼容性
-
-当前版本会继续读取由早期名称 `extract-session-seo-materials` 和 `extract-web3-seo-materials` 生成的合规会话文档，因此升级 Skill 不会丢失已有素材。
 
 ---
 
