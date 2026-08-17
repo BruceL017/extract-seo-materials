@@ -2,7 +2,7 @@
 
 Turn product-development conversations into traceable SEO source material for OpenAI Codex.
 
-[安装](#安装) | [使用方法](#使用方法) | [工作流程](#工作流程) | [输出结构](#输出结构) | [安全边界](#安全边界)
+[English](README.en.md) | [安装](#安装) | [使用方法](#使用方法) | [工作流程](#工作流程) | [输出结构](#输出结构) | [安全边界](#安全边界)
 
 Extract SEO Materials 是一个 Codex Skill，用于从开发者在当前产品开发会话中，提取可复用、可追溯、可持续累积的 SEO 初始素材。
 
