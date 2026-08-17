@@ -1,0 +1,6 @@
+interface:
+  display_name: "SEO 素材提取"
+  short_description: "总结当前开发会话并持续重建项目级 SEO 内容素材汇总"
+  default_prompt: "使用 $extract-seo-materials 总结当前会话的 SEO 内容素材，并重建项目汇总。"
+policy:
+  allow_implicit_invocation: true
