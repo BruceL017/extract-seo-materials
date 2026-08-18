@@ -52,7 +52,7 @@ Do not switch branches, pull, checkout, reset, modify files, or run product code
 
 ### Inventory and read the tasks
 
-1. Record a `scan_cutoff_at` timestamp, then use the Codex task tools to list regular, pinned, and archived tasks on the current host. Page through archived results to exhaustion and request the largest supported regular-task listing.
+1. Record `scan_cutoff_at` as a valid ISO-8601 timestamp with timezone, then use the Codex task tools to list regular, pinned, and archived tasks on the current host. Page through archived results to exhaustion and request the largest supported regular-task listing.
 2. Snapshot each candidate task's stable ID and update time, then deduplicate by stable ID. The scan covers only turns completed at or before `scan_cutoff_at`; later activity, including this Skill's own active turn, belongs to a future run.
 3. Filter the snapshot using the current project boundary before interpreting titles or summaries.
 4. Read every in-scope task through all available turn pages. Do not use title or summary relevance as a reason to skip a task.
@@ -155,7 +155,7 @@ If the legacy `_content_materials/summary/project-seo-materials.md` exists, leav
 Before finishing, verify the applicable schema and all of the following:
 
 - requested and resolved source modes are reported;
-- a project output records the fixed `scan_cutoff_at` used to exclude later task activity;
+- a project output records the fixed ISO-8601 `scan_cutoff_at` used to exclude later task activity, while a current summary writes the exact sentinel `not-applicable`;
 - every generated file is directly under `_content_materials/sessions/`;
 - current mode created zero or one session source;
 - complete and partial project documents are never accepted as source documents;

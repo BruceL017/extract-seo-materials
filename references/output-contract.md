@@ -11,6 +11,7 @@ Use these exact structures. Quote free-text YAML values and keep counts numeric.
 - [Topic-scoped project summary](#topic-scoped-project-summary)
 - [Partial project summary](#partial-project-summary)
 - [Source acceptance and legacy compatibility](#source-acceptance-and-legacy-compatibility)
+- [Schema-version-2 validation](#schema-version-2-validation)
 - [Legacy schema requirements](#legacy-schema-requirements)
 - [Topic grouping](#topic-grouping)
 - [Claim merging and conflict handling](#claim-merging-and-conflict-handling)
@@ -155,7 +156,7 @@ resolved_source_mode: "current | project"
 topic_filter: "none"
 coverage_status: "complete"
 checkout_scope: "current-workspace"
-scan_cutoff_at: "<ISO-8601 timestamp with timezone, or not-applicable for current mode>"
+scan_cutoff_at: "<mode-specific scan cutoff>"
 source_session_count: <integer>
 source_thread_count: <integer>
 discovered_thread_count: <integer>
@@ -179,7 +180,7 @@ generated_only: true
 - 实际来源模式：`<current | project>`
 - 主题限定：`none`
 - 扫描覆盖：`complete`
-- 扫描截点：`<timestamp | not-applicable>`
+- 扫描截点：`<resolved scan cutoff>`
 - 来源会话素材：<source_session_count>
 - 来源 Codex 会话：<source_thread_count>
 - 合格素材：<material_count>
@@ -193,7 +194,7 @@ generated_only: true
 - 成功读取：<read_thread_count>
 - 未读取：0
 
-For current mode, all four task-scan counts and `source_thread_count` are `0`. For project mode, set `source_session_count` to `0`. `source_session_count` and `source_thread_count` count only distinct rows that contribute retained material to the source index, and the material counts in those rows sum to `material_count`. `read_thread_count` records every fully read in-scope task, including tasks that contributed no accepted material. `source_thread_count` must never exceed `read_thread_count`. An empty summary therefore has zero contributing sources even when its project scan read tasks.
+`scan_cutoff_at` is always a YAML string: write the exact sentinel `"not-applicable"` for resolved `current`, and a valid ISO-8601 timestamp with timezone for resolved `project`; reject every other value. For current mode, all four task-scan counts and `source_thread_count` are `0`. For project mode, set `source_session_count` to `0`. `source_session_count` and `source_thread_count` count only distinct rows that contribute retained material to the source index, and the material counts in those rows sum to `material_count`. `read_thread_count` records every fully read in-scope task, including tasks that contributed no accepted material. `source_thread_count` must never exceed `read_thread_count`. An empty summary therefore has zero contributing sources even when its project scan read tasks.
 
 ## 淘汰概况
 
@@ -207,9 +208,9 @@ Use `本次没有淘汰候选。` when the count is zero. The row counts must su
 
 | 引用 | 来源类型 | 安全来源描述 | 来源时间 | 素材数 |
 |---|---|---|---|---:|
-| [S001] | `会话素材文件 | Codex 会话` | `<filename or safely summarized task title>` | <timestamp> | <count> |
+| [S001] | `<source_kind>` | `<filename or safely summarized task title>` | <timestamp> | <count> |
 
-Use `暂无来源。` instead of a table when no source exists. Do not expose an absolute path, raw task ID, account identifier, or transcript excerpt. A project-mode source label is local to that rebuild.
+Use `暂无来源。` instead of a table when no source exists. `source_kind` must be one of `会话素材文件` or `Codex 会话`. Do not expose an absolute path, raw task ID, account identifier, or transcript excerpt. A project-mode source label is local to that rebuild.
 
 ## SEO 主题
 
@@ -362,6 +363,81 @@ A malformed recognized session source blocks only the current-source summary reb
 
 Treat a canonical as recognized when its frontmatter contains `generated_by: extract-seo-materials` or any of the four project-summary document types defined by this contract. If it is recognized but malformed, current mode must preserve it and report blocked ownership; a complete unfiltered project-mode rebuild may replace it after independently validating the full new summary. If the canonical content is unrecognized, malformed frontmatter without a recognized marker, or foreign, every mode preserves it and reports the path conflict.
 
+## Schema-version-2 validation
+
+Validate schema-version-2 documents deterministically; a missing, empty, mismatched, or malformed required field is blocking for a recognized source or canonical. Free-text fields may vary, but controlled values and counts must follow this contract.
+
+### v2 session source
+
+An accepted v2 session source must have all of these frontmatter fields:
+
+```yaml
+document_type: seo-session-materials
+schema_version: 2
+generated_by: extract-seo-materials
+project: "<nonempty string>"
+session_id: "<final filename stem>"
+session_topic: "<nonempty string>"
+extracted_at: "<valid ISO-8601 timestamp with timezone>"
+source_scope: "current-visible-conversation"
+workspace_checked_at: "<valid ISO-8601 timestamp with timezone>"
+checkout_scope: "current-workspace"
+material_count: <nonnegative integer>
+```
+
+The `session_id` must equal the final filename stem, including a collision suffix such as `-2`. The body must contain exactly one `## 会话摘要` and exactly `material_count` sequential `## Mxxx` sections. Every material section must contain the nonempty `主题标签`, `产品/模块`, and `领域实体` fields; the controlled fields for search intent, contribution type, fact state, current-product state, public boundary, and a nonempty current-product anchor; plus the user-problem, discussion, conclusion/evidence, user-significance, search-question, reusable-point, missing-material, and source-summary subsections. A v2 source missing any of these fields or sections blocks a current-source rebuild; project mode does not consume generated sources.
+
+### v2 canonical, scoped, and partial summaries
+
+All v2 project documents must contain these common frontmatter fields with the stated types:
+
+```yaml
+document_type: "<one of the project document types>"
+schema_version: 2
+generated_by: extract-seo-materials
+project: "<nonempty string>"
+last_rebuilt_at: "<valid ISO-8601 timestamp with timezone>"
+requested_source_mode: "current | project | auto"
+resolved_source_mode: "current | project"
+topic_filter: "<none or nonempty normalized topic>"
+coverage_status: "complete | partial"
+checkout_scope: "current-workspace"
+scan_cutoff_at: "<mode-specific scan cutoff>"
+source_session_count: <nonnegative integer>
+source_thread_count: <nonnegative integer>
+discovered_thread_count: <nonnegative integer>
+in_scope_thread_count: <nonnegative integer>
+read_thread_count: <nonnegative integer>
+unread_thread_count: <nonnegative integer>
+material_count: <nonnegative integer>
+rejected_candidate_count: <nonnegative integer>
+topic_count: <nonnegative integer>
+generated_only: true
+```
+
+The `scan_cutoff_at` line resolves to one of these exact forms; do not emit the placeholder literally:
+
+```yaml
+resolved_source_mode: current
+scan_cutoff_at: "not-applicable"
+```
+
+```yaml
+resolved_source_mode: project
+scan_cutoff_at: "<valid ISO-8601 timestamp with timezone>"
+```
+
+Apply these document-specific constraints:
+
+- `seo-project-summary`: `topic_filter: "none"`, `coverage_status: "complete"`, and either resolved source mode. This is the only canonical document type.
+- `seo-project-summary-scoped`: `resolved_source_mode: "project"`, a nonempty `topic_filter`, and `coverage_status: "complete"`. It is timestamped and never canonical.
+- `seo-project-summary-partial`: `resolved_source_mode: "project"`, `topic_filter: "none"`, and `coverage_status: "partial"`.
+- `seo-project-summary-scoped-partial`: `resolved_source_mode: "project"`, a nonempty `topic_filter`, and `coverage_status: "partial"`.
+- For resolved `current`, `scan_cutoff_at` must be exactly `"not-applicable"`; for resolved `project`, it must be a valid ISO-8601 timestamp with timezone. Partial project documents always use the latter.
+- A complete document has `unread_thread_count: 0`; a partial document may use a positive value when task reads failed, otherwise `0`. For project documents, `read_thread_count <= in_scope_thread_count <= discovered_thread_count`; for current documents, all four task-scan counts and `source_thread_count` are `0`.
+- `source_session_count` and `source_thread_count` equal the distinct matching rows in the source index; their row material counts sum to `material_count`. The rejection table sums to `rejected_candidate_count`, and `topic_count` equals the number of `### Txxx` sections.
+- Every rendered source label must resolve to one source-index row, and every topic must use `已实现并保留` with a nonempty safe anchor. A mismatch in these relationships is malformed, not a best-effort document.
+
 ## Legacy schema requirements
 
 Validate a schema-version-1 current source against these required fields:
@@ -441,7 +517,7 @@ Maturity describes source readiness only. It is not evidence of keyword demand o
 
 ## Atomic write and no-output rules
 
-- For any invocation that may rebuild the canonical summary, obtain an exclusive lock keyed to `_content_materials/sessions/project-seo-materials.md` before snapshotting its summary inputs or deciding ownership. Hold the lock through validation and installation. If the lock cannot be obtained safely, wait and retry or stop without changing the canonical; never rebuild it unlocked.
+- For any invocation that may rebuild the canonical summary, use the fixed lock path `_content_materials/sessions/.project-seo-materials.lock`. Acquire it by exclusive creation (`O_CREAT|O_EXCL` or an equivalent atomic directory lock) before snapshotting summary inputs or deciding ownership. Store an invocation ID, host, PID, and acquisition timestamp in the lock, hold it through validation and installation, and release it only when the owner token matches. If the lock exists, wait and retry; take over only when its recorded owner is on the current host and its PID is confirmed no longer alive. If the metadata is missing, belongs to another host, or liveness is uncertain, do not delete it or rebuild unlocked—report a lock conflict.
 - While holding the lock, inspect canonical ownership, assemble the full candidate in a unique same-directory temp file, and validate counts and citations. Immediately before installation, re-read the canonical target. If it changed since the ownership decision, preserve it and abort the replacement; re-evaluate ownership only to classify and report the conflict, never to continue installing that candidate.
 - Install the validated unique temp over `project-seo-materials.md` with an atomic same-filesystem rename only after the lock-held ownership check succeeds. Never delete the old canonical first.
 - The lock serializes `extract-seo-materials` invocations that honor this contract. If any external target change is observed, treat it as a conflict and abort the replacement. A non-cooperating process that writes in the final system-call interval after the last ownership check is outside this portable file-based concurrency guarantee; do not claim otherwise.
