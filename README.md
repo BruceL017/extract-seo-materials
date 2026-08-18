@@ -67,10 +67,10 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
 - 非 Git 项目使用 Codex 项目身份和规范化目录路径；
 - 排除其他 clone、worktree、兄弟目录和嵌套仓库；
 - 不根据标题、摘要或同名文件夹猜测归属；
-- 通过 Codex 状态数据库和 active/archived rollout 的 `session_meta.cwd` 建立全量清单，不依赖可能截断的全局任务列表；
+- 通过 Codex 状态数据库、active/archived rollout 以及 `~/.agents/sessions` 中通过 Codex `session_meta` 校验的 JSONL 建立全量清单，不依赖可能截断的全局任务列表；
 - 逐会话提炼后再跨会话去重、补充和处理冲突。
 
-仓库内置的 `scripts/project_sessions.py` 只输出会话 ID、范围元数据和覆盖状态，不输出对话正文。若持久化记录缺失、损坏或无法读取，扫描会标记为 `partial`，不会用最近任务列表把它误判为完整结果。
+仓库内置的 `scripts/project_sessions.py` 只输出会话 ID、范围元数据和覆盖状态，不输出对话正文。使用 `--no-agents-sessions` 可以关闭 `~/.agents/sessions` 扫描。若持久化记录缺失、损坏或无法读取，扫描会标记为 `partial`，不会用最近任务列表把它误判为完整结果。
 
 会话负责提供用户问题、设计原因和工程讨论；当前工作区只负责确认相关功能、行为或限制仍然实现并保留。代码中存在但会话没有讨论的内容，不会被凭空扩展为 SEO 素材。
 

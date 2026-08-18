@@ -67,10 +67,10 @@ A project scan stays inside the current project directory:
 - A non-Git project uses its Codex project identity and normalized directory path.
 - Other clones, worktrees, sibling directories, and nested repositories are excluded.
 - Titles, summaries, and directory leaf names never establish project ownership.
-- The inventory comes from the Codex state database and active/archived rollout `session_meta.cwd`, not from a possibly truncated global task list.
+- The inventory comes from the Codex state database, active/archived rollouts, and JSONL files in `~/.agents/sessions` that pass Codex `session_meta` validation, not from a possibly truncated global task list.
 - Each task is extracted independently before cross-task deduplication, supplementation, and conflict handling.
 
-The bundled `scripts/project_sessions.py` emits only task IDs, scope metadata, and coverage status; it never emits conversation content. Missing, damaged, or unreadable persisted records make coverage `partial`, and a recent-task listing cannot upgrade that result to complete.
+The bundled `scripts/project_sessions.py` emits only task IDs, scope metadata, and coverage status; it never emits conversation content. Pass `--no-agents-sessions` to disable scanning `~/.agents/sessions`. Missing, damaged, or unreadable persisted records make coverage `partial`, and a recent-task listing cannot upgrade that result to complete.
 
 Conversations provide user problems, design reasons, and engineering discussion. The current workspace only confirms that the related feature, behavior, or limitation remains implemented. Repository content that was never discussed does not become conversation-derived SEO material.
 

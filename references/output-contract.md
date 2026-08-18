@@ -332,6 +332,8 @@ Add this section after `## 扫描覆盖`:
 | `<safe reason code>` | <count> |
 ```
 
+Every reason code in this table must be copied verbatim from a key in the inventory's `unreadable_scope_reasons` object, with the corresponding count. Do not translate, rename, merge, or invent reason codes.
+
 Do not list private paths, task IDs, or sensitive titles in failure details. The reason count must explain why coverage is partial, including an unprovable local persisted-session inventory, missing rollout or scope metadata, unreadable pages, decisive truncation, or a changing snapshot. A capped or unpageable global task listing cannot establish complete coverage.
 
 ## Source acceptance and legacy compatibility
