@@ -58,7 +58,7 @@ Project mode includes every eligible material package unless the user explicitly
 | Mode | Source | Repository inspection |
 |---|---|---|
 | `current` | The visible conversation | Read-only confirmation that candidates belong to the retained product |
-| `project` | Regular, pinned, and archived Codex tasks assigned to the current checkout | Read-only confirmation that candidates belong to the retained product |
+| `project` | Locally persisted Codex tasks whose metadata belongs to the current checkout | Read-only confirmation that candidates belong to the retained product |
 | `auto` | Resolves from explicit wording and current-conversation evidence | Follows the resolved mode |
 
 A project scan stays inside the current project directory:
@@ -67,7 +67,10 @@ A project scan stays inside the current project directory:
 - A non-Git project uses its Codex project identity and normalized directory path.
 - Other clones, worktrees, sibling directories, and nested repositories are excluded.
 - Titles, summaries, and directory leaf names never establish project ownership.
+- The inventory comes from the Codex state database, active/archived rollouts, and JSONL files in `~/.agents/sessions` that pass Codex `session_meta` validation, not from a possibly truncated global task list.
 - Each task is extracted independently before cross-task deduplication, supplementation, and conflict handling.
+
+The bundled `scripts/project_sessions.py` emits only task IDs, scope metadata, and coverage status; it never emits conversation content. Pass `--no-agents-sessions` to disable scanning `~/.agents/sessions`. Missing, damaged, or unreadable persisted records make coverage `partial`, and a recent-task listing cannot upgrade that result to complete.
 
 Conversations provide user problems, design reasons, and engineering discussion. The current workspace only confirms that the related feature, behavior, or limitation remains implemented. Repository content that was never discussed does not become conversation-derived SEO material.
 

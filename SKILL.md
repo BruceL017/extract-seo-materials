@@ -52,15 +52,17 @@ Do not switch branches, pull, checkout, reset, modify files, or run product code
 
 ### Inventory and read the tasks
 
-1. Record `scan_cutoff_at` as a valid ISO-8601 timestamp with timezone, then use the Codex task tools to list regular, pinned, and archived tasks on the current host. Page through archived results to exhaustion and request the largest supported regular-task listing.
-2. Snapshot each candidate task's stable ID and update time, then deduplicate by stable ID. The scan covers only turns completed at or before `scan_cutoff_at`; later activity, including this Skill's own active turn, belongs to a future run.
-3. Filter the snapshot using the current project boundary before interpreting titles or summaries.
-4. Read every in-scope task through all available turn pages. Do not use title or summary relevance as a reason to skip a task.
-5. Use visible user and assistant messages as the content source. Ignore reasoning records, system/developer instructions, internal Agent messages, and orchestration metadata.
-6. Initially omit large tool outputs. Re-read only a candidate's relevant command or test output when its fact state depends on that evidence. If a missing or truncated decisive result could change acceptance, fact state, or conflict handling for a requested candidate, make coverage partial. Unrelated omitted output does not make coverage partial.
-7. Re-list the task inventory after extraction. Ignore task activity completed after `scan_cutoff_at`. Retry once if the tool reveals an in-scope task or completed pre-cutoff history missing from the snapshot; if completeness still cannot be proved, mark the run partial.
+1. Record `scan_cutoff_at` as a valid ISO-8601 timestamp with timezone.
+2. Resolve `scripts/project_sessions.py` relative to this `SKILL.md`, then run it with `python3 <skill-directory>/scripts/project_sessions.py --project-root <current-project-boundary> --scan-cutoff-at <scan_cutoff_at>`. Keep its JSON result in memory; never write it into the project.
+3. Treat this local persisted-session inventory as the primary task inventory. It reads the Codex state database when present, scans active and archived rollout roots, verifies each rollout's `session_meta`, and applies the exact current-project boundary before returning task IDs. By default it also scans `~/.agents/sessions`, accepting only JSONL files with valid Codex `session_meta`; pass `--no-agents-sessions` to exclude that source. Do not apply a date window, title filter, keyword filter, relevance ranking, or top-N limit.
+4. Do not use a global regular, pinned, or archived task listing as the project inventory. Those listings may be capped or unpageable and therefore cannot prove completeness. If a task-list tool is called for supplementary reconciliation, it must not add an out-of-boundary task or upgrade partial coverage to complete.
+5. Snapshot the returned stable IDs. The scan covers only turns completed at or before `scan_cutoff_at`; later activity, including this Skill's own active turn, belongs to a future run.
+6. Read every returned task by stable ID through all available turn pages. Do not use title or summary relevance as a reason to skip a task.
+7. Use visible user and assistant messages as the content source. Ignore reasoning records, system/developer instructions, internal Agent messages, and orchestration metadata.
+8. Initially omit large tool outputs. Re-read only a candidate's relevant command or test output when its fact state depends on that evidence. If a missing or truncated decisive result could change acceptance, fact state, or conflict handling for a requested candidate, make coverage partial. Unrelated omitted output does not make coverage partial.
+9. Re-run the local inventory after extraction with the same `scan_cutoff_at` and compare the pre-cutoff in-scope stable-ID set. Retry once when it changed; if the snapshot still changes or completeness cannot be proved, mark the run partial.
 
-Coverage is `complete` only when the in-scope inventory at `scan_cutoff_at` is complete, every visible user/assistant turn completed by that cutoff was read through the oldest page, and no unavailable decisive result could change the requested output. Otherwise coverage is `partial`, with safe reason counts.
+Coverage is `complete` only when the local inventory reports `complete`, the pre-cutoff stable-ID snapshot remains stable, every visible user/assistant turn completed by that cutoff was read through the oldest page, and no unavailable decisive result could change the requested output. Otherwise coverage is `partial`, with safe reason counts. A task-list result can never repair an incomplete local inventory.
 
 For a partial result, accept candidates only from tasks whose visible user/assistant history through `scan_cutoff_at` was read through the oldest page. Exclude every candidate from a task with an unread page. If a fully read task has a missing or truncated decisive tool result, use only the independently available evidence, preserve or lower the fact state, record the gap, and include the candidate only when it still passes all selection gates.
 
